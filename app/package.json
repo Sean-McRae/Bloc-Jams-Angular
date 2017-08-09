@@ -1,0 +1,22 @@
+{
+  "name": "bloc-jams",
+  "version": "1.0.0",
+  "main": "album.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/officialhocc/bloc-jams.git"
+  },
+  "author": "Sean McRae",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/officialhocc/bloc-jams/issues"
+  },
+  "homepage": "https://github.com/officialhocc/bloc-jams#readme",
+  "description": "Bloc-Jams-Angular",
+  "keywords": [
+    "Angular"
+  ]
+}
