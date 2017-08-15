@@ -1,47 +1,24 @@
-(function() {
-	function SongPlayer(Fixtures) {
+(function () {
+	function SongPlayer($rootScope, Fixtures) {
 		var SongPlayer = {};
 
-		/**
-		* @desc album that songs are currently being played from
-		* @type {Object}
-		*/
 		var currentAlbum = Fixtures.getAlbum();
 
 		/**
-		* @desc Buzz object audio file
-		* @type {Object}
-		*/
+		 * @desc Buzz object audio file
+		 * @type {Object}
+		 */
 		var currentBuzzObject = null;
 
 		/**
-		* @function playSong
-		* @desc Starts playing a song and sets song.playing to true
-		* @param {Object} song
-		*/
-		var playSong = function(song) {
-			currentBuzzObject.play();
-			song.playing = true;
-		}
-
-		/**
-		* @function stopSong
-		* @desc Stops playing the current song and sets song.playing to false
-		* @param {Object} song
-		*/
-		var stopSong = function(song) {
-			currentBuzzObject.stop();
-			song.playing = false;
-		}
-
-		/**
-		* @function setSong
-		* @desc Stops currently playing song and loads new audio file as currentBuzzObject
-		* @param {Object} song
-		*/
-		var setSong = function(song) {
-			if(currentBuzzObject) {
-				stopSong(SongPlayer.currentSong);
+		 * @function
+		 * @desc Stops currently playing song and loads new audio file as currentBuzzObject
+		 * @param {Object} song
+		 */
+		var setSong = function (song) {
+			if (currentBuzzObject) {
+				currentBuzzObject.stop();
+				SongPlayer.currentSong.playing = null;
 			}
 
 			currentBuzzObject = new buzz.sound(song.audioUrl, {
@@ -49,35 +26,55 @@
 				preload: true
 			});
 
+			currentBuzzObject.bind('timeupdate', function () {
+				$rootScope.$apply(function () {
+					SongPlayer.currentTime = currentBuzzObject.getTime();
+				});
+			});
+
 			SongPlayer.currentSong = song;
 		};
 
 		/**
-		*	@function getSongIndex
-		* @desc returns the index of the song passed to it
-		* @param {Object} song
-		*/
-		var getSongIndex = function(song) {
+		 * @function playSong
+		 * @desc Plays the currentBuzzObject and sets the property of the song Object to true
+		 * @param {Object} song
+		 */
+		var playSong = function (song) {
+			currentBuzzObject.play();
+			song.playing = true;
+		}
+
+		var stopSong = function (song) {
+			currentBuzzObject.stop();
+			song.playing = null;
+		}
+
+		var getSongIndex = function (song) {
 			return currentAlbum.songs.indexOf(song);
 		};
 
 		/**
-		*@desc Currently playing song
-		*@type {Object}
-		*/
+		 * @desc Current Buzz object audio file
+		 * @type {Object}
+		 */
 		SongPlayer.currentSong = null;
+		SongPlayer.currentTime = null;
+		SongPlayer.volume = 60;
+
 
 		/**
-		* @function SongPlayer.play
-		* @desc Checks to see if the currentSong is equal to the song passed in. If it isn't, starts playing the new song. If it is, it pauses the currently playing song.
-		* @param {Object} song
-		*/
-		SongPlayer.play = function(song) {
+		 * @function SongPlayer.play
+		 * @desc Public method that takes a song object parameter. If the buzz object Song is not the same as the current
+		 * then a new song will load and play. If the buzz object Song is the same, and if it is paused, then the song will play.
+		 * @param {Object} song
+		 */
+		SongPlayer.play = function (song) {
 			song = song || SongPlayer.currentSong;
 			if (SongPlayer.currentSong !== song) {
 				setSong(song);
 				playSong(song);
-			} else if (SongPlayer.currentSong == song) {
+			} else if (SongPlayer.currentSong === song) {
 				if (currentBuzzObject.isPaused()) {
 					playSong(song);
 				}
@@ -85,21 +82,18 @@
 		};
 
 		/**
-		* @function SongPlayer.pause
-		* @desc pauses the currently playing song
-		* @param {Object} song
-		*/
-		SongPlayer.pause = function(song) {
+		 * @function SongPlayer.pause
+		 * @desc Public method. Takes a song object parameter. Pauses the currently playing Buzz Object
+		 * and sets the song's 'playing' attribute to false.
+		 * @param {Object} song
+		 */
+		SongPlayer.pause = function (song) {
 			song = song || SongPlayer.currentSong;
 			currentBuzzObject.pause();
 			song.playing = false;
-		}
+		};
 
-		/**
-		* @function SongPlayer.previous
-		* @desc plays the song before the currently playing song, or stops if at the beginning of the track list
-		*/
-		SongPlayer.previous = function() {
+		SongPlayer.previous = function () {
 			var currentSongIndex = getSongIndex(SongPlayer.currentSong);
 			currentSongIndex--;
 
@@ -112,15 +106,11 @@
 			}
 		};
 
-		/**
-		* @function SongPlayer.next
-		* @desc plays the next song after the one currently playing, or stops if at the end of the track list
-		*/
-		SongPlayer.next = function() {
+		SongPlayer.next = function () {
 			var currentSongIndex = getSongIndex(SongPlayer.currentSong);
 			currentSongIndex++;
 
-			if (currentSongIndex >= currentAlbum.songs.length) {
+			if (currentSongIndex === currentAlbum.songs.length) {
 				stopSong(SongPlayer.currentSong);
 			} else {
 				var song = currentAlbum.songs[currentSongIndex];
@@ -129,10 +119,23 @@
 			}
 		};
 
+		SongPlayer.setCurrentTime = function (time) {
+			if (currentBuzzObject) {
+				currentBuzzObject.setTime(time);
+			}
+		};
+
+		SongPlayer.setVolume = function (volume) {
+			if (currentBuzzObject) {
+				currentBuzzObject.setVolume(volume);
+			}
+			SongPlayer.volume = volume;
+		};
+
 		return SongPlayer;
 	}
 
 	angular
 		.module('blocJams')
-		.factory('SongPlayer', ['Fixtures', SongPlayer]);
+		.factory('SongPlayer', ['$rootScope', 'Fixtures', SongPlayer]);
 })();
